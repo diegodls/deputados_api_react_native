@@ -160,7 +160,7 @@ const Details = ({ navigation }) => {
                         <SharedElement
                             id={`${item.id}`}
                             animation='move'
-                            resize='clip'
+                            resize='none'
                             align='auto' >
                             <View style={styles.imgContainer}>
                                 <TouchableWithoutFeedback onPress={() => { navigate('FullScreenImage', { item }) }}>
