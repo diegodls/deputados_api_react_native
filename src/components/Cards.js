@@ -73,6 +73,8 @@ const styles = StyleSheet.create({
         height: undefined,
         resizeMode: 'cover',
         flex: 1,
+        borderTopRightRadius: 8,
+        borderTopLeftRadius: 8,
     },
     textContainer: {       
         paddingVertical: 5,

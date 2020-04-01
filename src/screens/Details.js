@@ -10,6 +10,7 @@ import {
     Dimensions,
     Image,
     TouchableWithoutFeedback,
+    FlatList
 } from 'react-native';
 
 import { SharedElement } from 'react-navigation-shared-element';
@@ -17,111 +18,42 @@ import { useNavigation } from 'react-navigation-hooks';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import IconFA from 'react-native-vector-icons/FontAwesome'
 
+//screens and components
 import LoadingLottieAnimation from '../components/LoadingLottieAnimation'
-import AvatarDetails from '../components/AvatarDetails'
+
 const BACKGROUND_COLOR = "#f4fafb";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-
-
-
 const initialLayout = { width: Dimensions.get('window').width };
 
 
 const Details = ({ navigation }) => {
 
     const [isLoading, setIsLoading] = useState(true);
+    const [isFetching, setIsFetching] = useState(false);
     const [itemDetails, setItemDetails] = useState(null);
     const [itemSpend, setItemSpend] = useState(null);
-    const [index, setIndex] = React.useState(0);
+    const [index, setIndex] = useState(0);
+    const [page, setPage] = useState(1)
+    const [onScroll, setOnScroll] = useState(false)
     const [routes] = React.useState([
         { key: 'first', title: 'Dados' },
         { key: 'second', title: 'Despesas' },
     ]);
 
-    const SecondRoute = () => (
-        <>
-            {
-                isLoading ? (
-                    <>
-                        <LoadingLottieAnimation />
-                    </>
-                ) : (<View style={styles.tab1} >
-                    <ScrollView style={styles.scrollview}>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>1111111111111</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>222222222222222222222222222</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>3333333333333333333333333333</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>6666666666666666666666666</Text>
-                    </ScrollView>
-                </View>)
-            }
-        </>
-    );
-
-    const FirstRoute = () => (
-        <>
-            {isLoading ? (
-                <>
-                    <LoadingLottieAnimation />
-                </>
-            ) : (<View style={styles.tab2} >
-                <View style={styles.scrollviewContainer} >
-                    <ScrollView>
-                        <Text>-------------------------------------------------------</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>444444444444444444</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>555555555555</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-                        <Text>AAAAAAAAAAAAA</Text>
-
-                        <Text>000000000000000000000000000000000000000000000000</Text>
-                    </ScrollView>
-                </View>
-            </View>)
-            }
-        </>
-    );
-
-    const renderScene = SceneMap({
-        first: FirstRoute,
-        second: SecondRoute,
-    });
-
     const { goBack, getParam, navigate } = useNavigation();
     const item = getParam("item");
 
 
-    async function fetchData() {
+    async function fetchData() {//metodo para carregar os dados do deputado escolhido e suas ultimas 10 despesas
 
         const URL_DETAILS = `https://dadosabertos.camara.leg.br/api/v2/deputados/${item.id}`;
-        const URL_SPEND = `https://dadosabertos.camara.leg.br/api/v2/deputados/${item.id}/despesas?ordem=DESC&ordenarPor=dataDocumento`;
+        const URL_SPEND = `https://dadosabertos.camara.leg.br/api/v2/deputados/${item.id}/despesas?ordem=DESC&ordenarPor=dataDocumento&pagina=1&itens=10`;
+
 
         await fetch(URL_DETAILS)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Details => Carregando dados...");
+                console.log("Details_fetchData => Carregando dados...");
                 console.log(responseJson.dados);
                 setItemDetails(responseJson.dados)
 
@@ -130,24 +62,135 @@ const Details = ({ navigation }) => {
                 console.log("Erro ao buscar detalhes do usuário" + " - " + item.id + "\n" + error)
             })
 
+        let arr = []
+
+
+
         await fetch(URL_SPEND)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Details => Carregando gastos...");
-                setItemSpend(responseJson.dados)
-                console.log("============> itemSpend");
-                console.log(itemSpend);
+                console.log("Details_fetchData => Carregando despesas...");
+                console.log(responseJson.dados.length);
+                setItemSpend(responseJson.dados);
                 setIsLoading(false);
             })
             .catch(error => {
-                console.log("Erro ao buscar gastos do usuário" + " - " + item.id + "\n" + error)
+                console.log("Erro ao buscar despesas" + " - " + item.id + "\n" + error);
             })
     }
 
-    useEffect(() => {
-        fetchData();
-    },
-        [])
+    useEffect(() => { fetchData(); }, []);
+
+    const TabDados = () => (
+        <>
+            {isLoading ? (
+                <>
+                    <LoadingLottieAnimation />
+                </>
+            ) : (<>
+                <View style={styles.textNameContainer}>
+                    <Text style={styles.textMiddle}>Nome completo </Text>
+                    <Text style={styles.textSmall}>{itemDetails.nomeCivil}</Text>
+                </View>
+                <View style={styles.textNameContainer}>
+                    <Text style={styles.textMiddle}>Nascimento </Text>
+                    <Text style={styles.textSmall}>{itemDetails.dataNascimento}</Text>
+                </View>
+                <View style={styles.textNameContainer}>
+                    <Text style={styles.textMiddle}>Cidade/Estado</Text>
+                    <Text style={styles.textSmall}>{itemDetails.municipioNascimento + " - " + itemDetails.ufNascimento}</Text>
+                </View>
+                <View style={styles.textNameContainer}>
+                    <Text style={styles.textMiddle}>Partido </Text>
+                    <Text style={styles.textSmall}>{itemDetails.ultimoStatus.siglaPartido}</Text>
+                </View>
+                <View style={styles.textNameContainer}>
+                    <Text style={styles.textMiddle}>Escolaridade </Text>
+                    <Text style={styles.textSmall}>{itemDetails.escolaridade}</Text>
+                </View>
+
+            </>)
+            }
+        </>
+    );
+
+
+    async function fetchMoreSpends() {//metodo para carregar mais despesas
+        if (!isFetching) {
+            setIsFetching(true);
+
+            const URL_SPEND = `https://dadosabertos.camara.leg.br/api/v2/deputados/${item.id}/despesas?ordem=DESC&ordenarPor=dataDocumento&pagina=${page}&itens=10`;
+
+            await fetch(URL_SPEND)
+                .then((response) => response.json())
+                .then((responseJson) => {
+                    let arr = [...itemSpend, ...responseJson.dados]
+                    setItemSpend(arr);
+                    setPage(page + 1)
+                    setIsFetching(false);
+
+                })
+                .catch(error => {
+                    console.log("Erro ao carregar mais despesas" + " - " + item.id + "\n" + error);
+                })
+
+
+        }
+    }
+
+
+
+    const TabDespesas = () => (
+        <>
+            {isLoading ? (
+                <>
+                    <LoadingLottieAnimation />
+                </>
+            ) : (
+                    <>
+                        {itemSpend.length > 0 ? (<><Text>{itemSpend.length}</Text></>) : (<><Text>0</Text></>)}
+                        <FlatList
+                            data={itemSpend}
+                            keyExtractor={(item, index) => String(index)}
+                            onEndReached={fetchMoreSpends}
+                            onScroll={setOnScroll(true)}
+                            onEndReachedThreshold={0.1}
+                            renderItem={({ item }) => (
+                                <View style={styles.itemSpendContainer} >
+                                    <View style={styles.textNameContainer} >
+                                        <Text style={styles.textMiddle}>Fornecedor</Text>
+                                        <Text style={styles.textSmall}>{item.nomeFornecedor}</Text>
+                                    </View>
+                                    <View style={styles.textNameContainer} >
+                                        <Text style={styles.textMiddle}>Tipo</Text>
+                                        <Text style={styles.textSmall}>{item.tipoDespesa}</Text>
+                                    </View>
+                                    <View style={styles.textNameContainer} >
+                                        <Text style={styles.textMiddle}>Data</Text>
+                                        <Text style={styles.textSmall}>{item.dataDocumento}</Text>
+                                    </View>
+                                    <View style={styles.textNameContainer} >
+                                        <Text style={styles.textMiddle}>Valor Liquido</Text>
+                                        <Text style={styles.textSmall}>R$ {item.valorLiquido}</Text>
+                                    </View>
+                                </View>
+                            )}
+                        />
+
+                    </>
+                )
+            }
+        </>
+    );
+
+
+
+    const renderScene = SceneMap({
+        first: TabDados,
+        second: TabDespesas,
+    });
+
+
 
 
     return (
@@ -155,33 +198,34 @@ const Details = ({ navigation }) => {
             <StatusBar backgroundColor={BACKGROUND_COLOR} barStyle="dark-content" />
             <SafeAreaView style={styles.container}>
                 <IconFA name="chevron-left" size={35} style={styles.iconClose} onPress={() => goBack()} />
-                <Fragment>
+                <View style={styles.subContainer}>
                     <View style={styles.infoContainer}>
-                        <SharedElement
-                            id={`${item.id}`}
-                            animation='move'
-                            resize='none'
-                            align='auto' >
+                        <TouchableWithoutFeedback onPress={() => { navigate('FullScreenImage', { item }) }}>
                             <View style={styles.imgContainer}>
-                                <TouchableWithoutFeedback onPress={() => { navigate('FullScreenImage', { item }) }}>
+                                <SharedElement
+                                    id={`${item.id}`}
+                                    animation='move'
+                                    resize='none'
+                                    align='auto' >
                                     <Image style={styles.image} source={{ uri: item.urlFoto }} />
-                                </TouchableWithoutFeedback>
+                                </SharedElement>
                             </View>
-                        </SharedElement>
-
+                        </TouchableWithoutFeedback>
                         <View style={[styles.textNameContainer, { marginTop: 5 }]}>
                             <Text style={styles.textBig}>{item.nome}</Text>
                         </View>
                     </View>
-                </Fragment>
 
-                <View style={styles.tabViewContainer}>
-                    <TabView
-                        navigationState={{ index, routes }}
-                        renderScene={renderScene}
-                        onIndexChange={setIndex}
-                        initialLayout={initialLayout}
-                    />
+                    <View style={styles.tabViewContainer}>
+                        <TabView
+                            navigationState={{ index, routes }}
+                            renderScene={renderScene}
+                            onIndexChange={setIndex}
+                            initialLayout={initialLayout}
+                        />
+
+                    </View>
+
                 </View>
             </SafeAreaView>
 
@@ -200,7 +244,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: BACKGROUND_COLOR,
-
+    },
+    subContainer: {
+        marginTop: 50,
+        flex: 1,
+        backgroundColor: BACKGROUND_COLOR,
     },
     iconClose: {
         padding: 20,
@@ -216,8 +264,7 @@ const styles = StyleSheet.create({
         width: 200,
         height: 200,
         borderRadius: 100,
-        marginTop: 50,
-        borderWidth: 5,
+
         borderColor: '#FFF',
         overflow: "hidden",
         shadowColor: "#000",
@@ -230,10 +277,14 @@ const styles = StyleSheet.create({
         elevation: 7,
     },
     image: {
-        width: '100%',
-        height: '100%',
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        borderWidth: 5,
+        borderColor: '#FFF',
+        overflow: "hidden",
         resizeMode: 'cover',
-        flex: 1,
+
     },
     textNameContainer: {
         padding: 10,
@@ -254,23 +305,12 @@ const styles = StyleSheet.create({
         color: '#222',
     },
     tabViewContainer: {
-
         flex: 2,
     },
-    tab1: {
-
-        flex: 1,
-    },
-    tab2: {
-
-    },
-    scrollview: {
-        height: 600,
-
-    },
-    scrollviewContainer: {
-        height: 100,
-
+    itemSpendContainer: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#0f3250',
+        marginBottom: 2,
     },
 
 });

@@ -27,7 +27,6 @@ const FullScreenImage = () => {
         <SafeAreaView style={styles.container}>
             <StatusBar backgroundColor={BACKGROUND_COLOR} barStyle="light-content" />
             <IconFA name="chevron-left" size={35} style={styles.iconClose} onPress={() => goBack()} />
-
             <View style={{ flex: 1 }}></View>
             <SharedElement
                 id={`${item.id}`}
@@ -53,7 +52,8 @@ const styles = StyleSheet.create({
     iconClose: {
         padding: 20,
         position: 'absolute',
-        zIndex: 999
+        zIndex: 999,
+        color: '#f4fafb'
     },
     imgContainer: {
         flex: 4,

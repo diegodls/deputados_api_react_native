@@ -30,6 +30,8 @@ const MainScreen = ({ navigation }) => {
   const [error, setError] = useState(false);
   const [dataRAW, setDataRaw] = useState();
   const [dataToShow, setDataToShow] = useState();
+  const [page, setPage] = useState(1);
+  const [isFetching, setIsFetching] = useState(false);
   const [errorFetchData, setErrorFetchData] = useState("");
   const [searchText, setSearchText] = useState("");
   const [numColumns, setNumColumn] = useState(2);
@@ -41,6 +43,7 @@ const MainScreen = ({ navigation }) => {
 
   async function fetchData() {
     const URL = "https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome";
+    //const URL = `https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome&pagina=${page}&itens=10`;
 
     await fetch(URL)
       .then((response) => response.json())
@@ -73,11 +76,8 @@ const MainScreen = ({ navigation }) => {
   }
 
   updateSearchText = (searchText) => {
-
     let dataToShowFormated = [];
-
     setSearchText(searchText);
-
     if (searchText !== "") {
       let searchTextFormated = searchText.toLowerCase();
       dataToShowFormated = dataRAW.filter((item) => {
@@ -89,6 +89,40 @@ const MainScreen = ({ navigation }) => {
 
     } else {
       setDataToShow([...dataRAW])
+    }
+  }
+
+
+  async function handleLoadMore() {
+    if (!isFetching) {
+      setIsFetching(true);
+
+      const URL = `https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome&pagina=${page}&itens=10`;
+
+      await fetch(URL)
+        .then((response) => response.json())
+        .then((responseJson) => {
+          let arr = []
+          if (dataToShow.length > 0) {
+            arr = [...dataToShow, ...responseJson.dados]
+          } else {
+            arr = [responseJson.dados]
+          }
+
+
+          setIsLoading(false);
+          setDataRaw(responseJson.dados);
+          setDataToShow(arr);
+
+          setPage(page + 1)
+          setIsFetching(false);
+
+        })
+        .catch(error => {
+          console.log("Erro ao carregar mais despesas" + " - " + item.id + "\n" + error);
+        })
+
+
     }
   }
 
@@ -126,6 +160,7 @@ const MainScreen = ({ navigation }) => {
             data={dataToShow}
             keyExtractor={(item) => item.id.toString()}
             numColumns={numColumns}
+            //onEndReached={handleLoadMore}
             renderItem={({ item }) => (
               <Cards {...item} navigation={navigation} />
             )}
