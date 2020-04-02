@@ -15,29 +15,26 @@ import {
 
 import { SharedElement } from 'react-navigation-shared-element';
 import { useNavigation } from 'react-navigation-hooks';
-import { TabView, SceneMap } from 'react-native-tab-view';
+import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import IconFA from 'react-native-vector-icons/FontAwesome'
 
 //screens and components
 import LoadingLottieAnimation from '../components/LoadingLottieAnimation'
 
-const BACKGROUND_COLOR = "#f4fafb";
+const BACKGROUND_COLOR = '#f4fafb';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const initialLayout = { width: Dimensions.get('window').width };
 
-
-const Details = ({ navigation }) => {
+const Details = () => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [isFetching, setIsFetching] = useState(false);
-    const [itemDetails, setItemDetails] = useState(null);
-    const [itemSpend, setItemSpend] = useState(null);
+    const [itemDetails, setItemDetails] = useState([]);
+    const [itemSpend, setItemSpend] = useState([]);
     const [index, setIndex] = useState(0);
-    const [page, setPage] = useState(1)
-    const [onScroll, setOnScroll] = useState(false)
-    const [routes] = React.useState([
-        { key: 'first', title: 'Dados' },
-        { key: 'second', title: 'Despesas' },
+    const [page, setPage] = useState(1);
+    const [routes] = useState([
+        { key: 'first', title: 'Dados', icon: 'user' },
+        { key: 'second', title: 'Despesas', icon: 'shopping-cart' },
     ]);
 
     const { goBack, getParam, navigate } = useNavigation();
@@ -55,15 +52,12 @@ const Details = ({ navigation }) => {
             .then((responseJson) => {
                 console.log("Details_fetchData => Carregando dados...");
                 console.log(responseJson.dados);
-                setItemDetails(responseJson.dados)
+                setItemDetails(responseJson.dados);
 
             })
             .catch(error => {
                 console.log("Erro ao buscar detalhes do usuário" + " - " + item.id + "\n" + error)
             })
-
-        let arr = []
-
 
 
         await fetch(URL_SPEND)
@@ -71,7 +65,8 @@ const Details = ({ navigation }) => {
             .then((responseJson) => {
                 console.log("Details_fetchData => Carregando despesas...");
                 console.log(responseJson.dados.length);
-                setItemSpend(responseJson.dados);
+                const newArrayWithID = insertID(responseJson.dados)
+                setItemSpend(newArrayWithID);
                 setIsLoading(false);
             })
             .catch(error => {
@@ -114,6 +109,75 @@ const Details = ({ navigation }) => {
         </>
     );
 
+    function insertID(array) {
+        //metodo para adicionar ID's aos objetos sem ID, para evitar problema com Flatlist(e o uso do index)
+        console.log("\n")
+        console.log("Function InserID")
+
+
+        let lastID = null;
+        let lastIDPlus = null;
+        let lastItem = [];
+        let arr = array;
+        let newArray = []
+
+        if (itemSpend.length > 0) {//se tiver tiver elementos no array itemSpend, vai continuar a inserção de ids
+            console.log("[INICIO] - Array existente, continuando ID's " + typeof (arr) + " - " + arr.length + " items.")
+
+            lastID = itemSpend[itemSpend.length - 1].id
+            lastIDPlus = itemSpend[itemSpend.length - 1].id
+            lastItem = itemSpend[itemSpend.length - 1]
+
+            console.log("lastID:")
+            console.log(lastID)
+
+            console.log("lastItem:")
+            console.log(lastItem)
+
+            arr.forEach((item) => {
+                lastID++
+                newArray.push({
+                    ...item,
+                    id: lastID
+                })
+
+            })
+
+            console.log("[FIM] - insertID_ arr ==> Array Existente")
+
+            console.log("\n")
+        } else {//se não tiver elementos no array itemSpend, vai iniciar a inserção de ids
+            console.log("[INICIO] - Array Novo, Iniciando ID's " + typeof (arr) + " - " + arr.length + " items.")
+            let startID = 1;
+
+            arr.forEach((item) => {
+                newArray.push({
+                    ...item,
+                    id: startID
+                })
+                startID++
+            })
+
+            //console para mostrar o array que entrou e o que saiu
+            // console.log("")
+            // console.log("insertID_ arr - " + typeof (arr) + " - " + arr.length + " items.")
+            // arr.forEach((item) => {
+            //     console.log(item)
+            // })
+            // console.log("")
+            // console.log("insertID_ newArray - " + typeof (newArray) + " - " + newArray.length + " items.")
+            // newArray.forEach((item) => {
+            //     console.log(item)
+            // })
+            // console.log("")
+
+            console.log("[FIM] - Array Novo, iniciando ID's - " + typeof (arr) + " - " + arr.length + " items.")
+
+        }
+
+        return newArray;
+
+    }
 
     async function fetchMoreSpends() {//metodo para carregar mais despesas
         if (!isFetching) {
@@ -124,21 +188,22 @@ const Details = ({ navigation }) => {
             await fetch(URL_SPEND)
                 .then((response) => response.json())
                 .then((responseJson) => {
-                    let arr = [...itemSpend, ...responseJson.dados]
+                  
+                    console.log("Details_fetchMoreSpends => Carregando mais despesas...");
+                    const newArrayWithID = insertID(responseJson.dados)
+                    let arr = [...itemSpend, ...newArrayWithID]
                     setItemSpend(arr);
                     setPage(page + 1)
                     setIsFetching(false);
-
+                  
                 })
                 .catch(error => {
-                    console.log("Erro ao carregar mais despesas" + " - " + item.id + "\n" + error);
+                    console.log("Erro ao carregar mais despesas - " + item.id + "\n" + error);
                 })
 
 
         }
     }
-
-
 
     const TabDespesas = () => (
         <>
@@ -149,11 +214,10 @@ const Details = ({ navigation }) => {
             ) : (
                     <>
                         {itemSpend.length > 0 ? (<><Text>{itemSpend.length}</Text></>) : (<><Text>0</Text></>)}
-                        <FlatList
+                        <FlatList                            
                             data={itemSpend}
-                            keyExtractor={(item, index) => String(index)}
-                            onEndReached={fetchMoreSpends}
-                            onScroll={setOnScroll(true)}
+                            keyExtractor={(item) => String(item.id)}
+                            onEndReached={fetchMoreSpends}                            
                             onEndReachedThreshold={0.1}
                             renderItem={({ item }) => (
                                 <View style={styles.itemSpendContainer} >
@@ -183,14 +247,34 @@ const Details = ({ navigation }) => {
         </>
     );
 
-
-
     const renderScene = SceneMap({
         first: TabDados,
         second: TabDespesas,
     });
 
+    const renderTabBar = props => (
+        <TabBar
+            {...props}
+            style={styles.tabBarStyle}
 
+            indicatorStyle={styles.tabBarStyleindicatorStyle}
+
+            renderIcon={({ route, focused }) => (
+                <IconFA
+                    size={20}
+                    name={route.icon}
+                    color={focused ? '#f4fafb' : '#8da1b3'}
+                />
+            )}
+
+
+            renderLabel={({ route, focused }) => (
+                <Text style={{ color: focused ? '#f4fafb' : '#8da1b3', fontFamily: 'BalooThambi2-Medium', }}>
+                    {route.title}
+                </Text>
+            )}
+        />
+    )
 
 
     return (
@@ -221,7 +305,9 @@ const Details = ({ navigation }) => {
                             navigationState={{ index, routes }}
                             renderScene={renderScene}
                             onIndexChange={setIndex}
-                            initialLayout={initialLayout}
+                            initialLayout={styles.tabViewInitialLayout}
+                            style={styles.tabViewBar}
+                            renderTabBar={renderTabBar}
                         />
 
                     </View>
@@ -266,8 +352,8 @@ const styles = StyleSheet.create({
         borderRadius: 100,
 
         borderColor: '#FFF',
-        overflow: "hidden",
-        shadowColor: "#000",
+        overflow: 'hidden',
+        shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 3,
@@ -282,7 +368,7 @@ const styles = StyleSheet.create({
         borderRadius: 100,
         borderWidth: 5,
         borderColor: '#FFF',
-        overflow: "hidden",
+        overflow: 'hidden',
         resizeMode: 'cover',
 
     },
@@ -294,15 +380,22 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 24,
         color: '#000',
+        fontFamily: 'BalooThambi2-Medium',
     },
     textMiddle: {
         fontWeight: 'bold',
         fontSize: 20,
         color: '#222',
+        fontFamily: 'BalooThambi2-Medium',
     },
     textSmall: {
         fontSize: 16,
         color: '#222',
+        fontFamily: 'BalooThambi2-Medium',
+    },
+    tabViewInitialLayout: {
+        width: SCREEN_WIDTH,
+
     },
     tabViewContainer: {
         flex: 2,
@@ -311,6 +404,16 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#0f3250',
         marginBottom: 2,
+    },
+    tabViewBar: {
+
+    },
+    tabBarStyle: {
+        backgroundColor: '#0f3250',
+        overflow: 'hidden',
+    },
+    tabBarStyleindicatorStyle: {
+        backgroundColor: '#f4fafb',
     },
 
 });
