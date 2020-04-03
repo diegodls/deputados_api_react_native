@@ -14,7 +14,7 @@ import { useNavigation } from 'react-navigation-hooks'
 
 //const
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const BACKGROUND_COLOR = "#f4fafb";
+const BACKGROUND_COLOR = "#ececec";
 
 const Cards = (props) => {
 
@@ -84,11 +84,14 @@ const styles = StyleSheet.create({
     name: {
         fontWeight: "bold",
         fontSize: 20,
+        fontFamily: 'OpenSans-Regular',
+        color: '#353535',
         
     },
     subName: {
-        fontSize: 16,
-        
+        fontSize: 16,        
+        fontFamily: 'OpenSans-SemiBold',
+        color: '#353535',
     },
 })
 

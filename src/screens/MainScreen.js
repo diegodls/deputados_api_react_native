@@ -19,7 +19,7 @@ import LoadingLottieAnimation from '../components/LoadingLottieAnimation'
 
 
 //props
-const BACKGROUND_COLOR = "#f4fafb"
+const BACKGROUND_COLOR = "#ececec"
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 
 //api

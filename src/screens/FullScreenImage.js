@@ -14,7 +14,7 @@ import {
 import { SharedElement } from 'react-navigation-shared-element';
 import { useNavigation } from 'react-navigation-hooks';
 import IconFA from 'react-native-vector-icons/FontAwesome'
-const BACKGROUND_COLOR = "#000";
+const BACKGROUND_COLOR = '#ececec';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 
@@ -25,7 +25,7 @@ const FullScreenImage = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar backgroundColor={BACKGROUND_COLOR} barStyle="light-content" />
+            <StatusBar backgroundColor={'#000'} barStyle="light-content" />
             <IconFA name="chevron-left" size={35} style={styles.iconClose} onPress={() => goBack()} />
             <View style={{ flex: 1 }}></View>
             <SharedElement
@@ -46,14 +46,14 @@ const FullScreenImage = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: BACKGROUND_COLOR,
+        backgroundColor: '#000',
 
     },
     iconClose: {
         padding: 20,
         position: 'absolute',
         zIndex: 999,
-        color: '#f4fafb'
+        color: BACKGROUND_COLOR,
     },
     imgContainer: {
         flex: 4,
