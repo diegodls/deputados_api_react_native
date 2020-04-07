@@ -3,6 +3,6 @@ import LottieView from 'lottie-react-native';
 
 export default class LoadingLottieAnimation extends Component {
   render() {
-    return <LottieView source={require('../assets/lottie_animations/loading_circle_gray.json')} autoPlay loop />;
+    return <LottieView source={require('../assets/lottie_animations/loading_circle_blue.json')} autoPlay loop  />;
   }
 }
