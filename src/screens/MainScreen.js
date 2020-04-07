@@ -8,10 +8,11 @@ import {
   FlatList,
   Dimensions,
   TouchableWithoutFeedback,
+  TextInput,
 
 } from 'react-native';
 
-import { SearchBar } from 'react-native-elements'
+import IconFA from 'react-native-vector-icons/FontAwesome'
 
 //components
 import Cards from '../components/Cards'
@@ -30,8 +31,7 @@ const MainScreen = ({ navigation }) => {
   const [error, setError] = useState(false);
   const [dataRAW, setDataRaw] = useState();
   const [dataToShow, setDataToShow] = useState();
-  const [page, setPage] = useState(1);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [errorFetchData, setErrorFetchData] = useState("");
   const [searchText, setSearchText] = useState("");
   const [numColumns, setNumColumn] = useState(2);
@@ -43,13 +43,11 @@ const MainScreen = ({ navigation }) => {
 
   async function fetchData() {
     const URL = "https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome";
-    //const URL = `https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome&pagina=${page}&itens=10`;
 
     await fetch(URL)
       .then((response) => response.json())
       .then((responseJson) => {
-        console.log("Carregando...");
-        console.log(responseJson.dados[0]);
+      
 
         setIsLoading(false);
         setDataRaw(responseJson.dados);
@@ -59,19 +57,39 @@ const MainScreen = ({ navigation }) => {
       .catch(error => {
         setError(true);
         setErrorFetchData(error.toString());
-        console.log(error)
+
       })
   }
 
   renderHeader = () => {
     return (
-      <SearchBar
-        placeholder="Pesquisar..."
-        lightTheme
-        round
-        editable={true}
-        value={searchText}
-        onChangeText={updateSearchText} />
+      <View style={styles.searchContainer}>
+        <IconFA
+          name='search'
+          size={25}
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={styles.searchTextinput}
+          placeholder={"Pesquisar..."}
+          value={searchText}
+          onChangeText={updateSearchText}
+          underlineColorAndroid='transparent' />
+        {isSearching ? (
+          <TouchableWithoutFeedback onPress={() => { updateSearchText("") }}>
+            <View style={styles.searchIconDelete}>
+              <IconFA
+                name='remove'
+                size={25}
+                style={styles.searchIcon}
+                color={'#d63447'} />
+            </View>
+          </TouchableWithoutFeedback>
+        ) : (
+            <View />
+          )}
+
+      </View>
     )
   }
 
@@ -79,6 +97,7 @@ const MainScreen = ({ navigation }) => {
     let dataToShowFormated = [];
     setSearchText(searchText);
     if (searchText !== "") {
+      setIsSearching(true);
       let searchTextFormated = searchText.toLowerCase();
       dataToShowFormated = dataRAW.filter((item) => {
         if (item.nome.toLowerCase().includes(searchTextFormated)) {
@@ -88,41 +107,8 @@ const MainScreen = ({ navigation }) => {
       setDataToShow(dataToShowFormated)
 
     } else {
+      setIsSearching(false);
       setDataToShow([...dataRAW])
-    }
-  }
-
-
-  async function handleLoadMore() {
-    if (!isFetching) {
-      setIsFetching(true);
-
-      const URL = `https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome&pagina=${page}&itens=10`;
-
-      await fetch(URL)
-        .then((response) => response.json())
-        .then((responseJson) => {
-          let arr = []
-          if (dataToShow.length > 0) {
-            arr = [...dataToShow, ...responseJson.dados]
-          } else {
-            arr = [responseJson.dados]
-          }
-
-
-          setIsLoading(false);
-          setDataRaw(responseJson.dados);
-          setDataToShow(arr);
-
-          setPage(page + 1)
-          setIsFetching(false);
-
-        })
-        .catch(error => {
-          console.log("Erro ao carregar mais despesas" + " - " + item.id + "\n" + error);
-        })
-
-
     }
   }
 
@@ -139,7 +125,13 @@ const MainScreen = ({ navigation }) => {
       return (
         <View style={styles.container}>
           <StatusBar barStyle="dark-content" backgroundColor={BACKGROUND_COLOR} />
-          <LoadingLottieAnimation />
+          <View style={styles.flex} />
+          <View style={styles.backGreen}>
+            <View style={styles.backYellow}>
+              <LoadingLottieAnimation />
+            </View>
+          </View>
+          <View style={styles.flex} />
         </View>
       )
     }
@@ -148,11 +140,6 @@ const MainScreen = ({ navigation }) => {
       <>
         <StatusBar barStyle="dark-content" backgroundColor={BACKGROUND_COLOR} />
         <SafeAreaView style={styles.container}>
-          <TouchableWithoutFeedback onPress={() => { navigate('test_tabs') }}>
-            <View style={[styles.textNameContainer, { marginTop: 5 }]}>
-              <Text style={styles.textBig}>TESTE</Text>
-            </View>
-          </TouchableWithoutFeedback>
           <FlatList
             columnWrapperStyle={styles.items}
             ListHeaderComponent={renderHeader()}
@@ -160,7 +147,7 @@ const MainScreen = ({ navigation }) => {
             data={dataToShow}
             keyExtractor={(item) => item.id.toString()}
             numColumns={numColumns}
-            //onEndReached={handleLoadMore}
+
             renderItem={({ item }) => (
               <Cards {...item} navigation={navigation} />
             )}
@@ -181,14 +168,57 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  flex: {
+    flex: 1,
+  },
+  backGreen: {
+    flex: 2,
+    backgroundColor: '#71a95a',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+
+  },
+  backYellow: {
+    backgroundColor: '#f5f687',
+    height: '50%',
+    width: '50%',
+    transform: [{ rotate: "45deg" }]
+  },
   flatList: {
     flex: 1,
     width: SCREEN_WIDTH,
-
   },
   items: {
     justifyContent: 'space-between',
     margin: 10,
+  },
+  searchContainer: {
+    alignItems: "center",
+    flexDirection: 'row',
+    margin: 10,
+    height: 50,
+    overflow: 'hidden',
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.29,
+    shadowRadius: 4.65,
+    elevation: 7,
+    backgroundColor: '#FFF'
+  },
+  searchIcon: {
+    padding: 10,
+  },
+  searchIconDelete: {
+    padding: 10,
+
+  },
+  searchTextinput: {
+    flex: 1,
   },
 });
 

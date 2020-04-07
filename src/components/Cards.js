@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 
 import { SharedElement } from 'react-navigation-shared-element';
-
 import { useNavigation } from 'react-navigation-hooks'
 
 //const
@@ -96,14 +95,3 @@ const styles = StyleSheet.create({
 })
 
 export default Cards;
-
-  // const id = this.props.item.id;
-        // const name = this.props.item.nome;
-        // const image = this.props.item.urlFoto;
-        // const siglaPartido = this.props.item.siglaPartido;
-        // const siglaUf = this.props.item.siglaUf;
-        // name={item.nome} 
-        // photo={item.urlFoto} 
-        // siglaPartido={item.siglaPartido} 
-        // id={item.id} 
-        // siglaUf={item.siglaUf} 

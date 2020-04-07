@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     SafeAreaView,
     StyleSheet,
-    ScrollView,
     View,
     Text,
     StatusBar,
@@ -20,6 +19,7 @@ import IconFA from 'react-native-vector-icons/FontAwesome'
 
 //screens and components
 import LoadingLottieAnimation from '../components/LoadingLottieAnimation'
+import moment from 'moment';
 
 const BACKGROUND_COLOR = '#ececec';
 const FONT_COLOR = '#414141';
@@ -27,8 +27,6 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const Details = () => {
 
-
-    const [isLoading, setIsLoading] = useState(false);
     const [isFetchingDetails, setIsFetchingDetails] = useState(true);
     const [isFetchingSpends, setIsFetchingSpends] = useState(true);
     const [isFetchingMoreSpends, setIsFetchingMoreSpends] = useState(false);
@@ -48,22 +46,20 @@ const Details = () => {
 
     async function fetchDetails() {
         setIsFetchingDetails(true);
-        setIsLoading(true)
 
         const URL_DETAILS = `https://dadosabertos.camara.leg.br/api/v2/deputados/${item.id}`;
 
         await fetch(URL_DETAILS)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Details_fetchData => Carregando dados...");
-                console.log(responseJson.dados);
+
                 setItemDetails(responseJson.dados);
                 setIsFetchingDetails(false);
             })
             .catch(error => {
                 setErrorDetails(true);
                 setIsFetchingDetails(false);
-                console.log("Erro ao buscar detalhes do usuário" + " - " + item.id + "\n" + error)
+
             })
 
     }
@@ -73,35 +69,29 @@ const Details = () => {
 
         const URL_SPEND = `https://dadosabertos.camara.leg.br/api/v2/deputados/${item.id}/despesas?ordem=DESC&ordenarPor=dataDocumento&pagina=1&itens=10`;
 
-
         await fetch(URL_SPEND)
             .then((response) => response.json())
             .then((responseJson) => {
-                console.log("Details_fetchData => Carregando despesas...");
-                console.log(responseJson.dados.length);
                 const newArrayWithID = insertID(responseJson.dados)
                 setItemSpend(newArrayWithID);
+                setPage(1);
                 setIsFetchingSpends(false);
-
             })
             .catch(error => {
                 setErrorSpends(true);
                 setIsFetchingSpends(false);
-                console.log("Erro ao buscar despesas" + " - " + item.id + "\n" + error);
             })
     }
+
 
     async function fetchMoreSpends() {//metodo para carregar mais despesas
         if (!isFetchingMoreSpends || isFetchingSpends) {
             setIsFetchingMoreSpends(true)
-
             const URL_SPEND = `https://dadosabertos.camara.leg.br/api/v2/deputados/${item.id}/despesas?ordem=DESC&ordenarPor=dataDocumento&pagina=${page}&itens=10`;
 
             await fetch(URL_SPEND)
                 .then((response) => response.json())
                 .then((responseJson) => {
-
-                    console.log("Details_fetchMoreSpends => Carregando mais despesas...");
                     const newArrayWithID = insertID(responseJson.dados)
                     let arr = [...itemSpend, ...newArrayWithID]
                     setItemSpend(arr);
@@ -109,7 +99,7 @@ const Details = () => {
                     setIsFetchingMoreSpends(false)
                 })
                 .catch(error => {
-                    console.log("Erro ao carregar mais despesas - " + item.id + "\n" + error);
+
                 })
 
 
@@ -120,10 +110,6 @@ const Details = () => {
 
     function insertID(array) {
         //metodo para adicionar ID's aos objetos sem ID, para evitar problema com Flatlist(e o uso do index)
-        console.log("\n")
-        console.log("Function InserID")
-
-
         let lastID = null;
         let lastIDPlus = null;
         let lastItem = [];
@@ -131,18 +117,9 @@ const Details = () => {
         let newArray = []
 
         if (itemSpend.length > 0) {//se tiver tiver elementos no array itemSpend, vai continuar a inserção de ids
-            console.log("[INICIO] - Array existente, continuando ID's " + typeof (arr) + " - " + arr.length + " items.")
-
             lastID = itemSpend[itemSpend.length - 1].id
             lastIDPlus = itemSpend[itemSpend.length - 1].id
             lastItem = itemSpend[itemSpend.length - 1]
-
-            console.log("lastID:")
-            console.log(lastID)
-
-            console.log("lastItem:")
-            console.log(lastItem)
-
             arr.forEach((item) => {
                 lastID++
                 newArray.push({
@@ -152,13 +129,8 @@ const Details = () => {
 
             })
 
-            console.log("[FIM] - insertID_ arr ==> Array Existente")
-
-            console.log("\n")
         } else {//se não tiver elementos no array itemSpend, vai iniciar a inserção de ids
-            console.log("[INICIO] - Array Novo, Iniciando ID's " + typeof (arr) + " - " + arr.length + " items.")
             let startID = 1;
-
             arr.forEach((item) => {
                 newArray.push({
                     ...item,
@@ -166,26 +138,20 @@ const Details = () => {
                 })
                 startID++
             })
-
-            //console para mostrar o array que entrou e o que saiu
-            // console.log("")
-            // console.log("insertID_ arr - " + typeof (arr) + " - " + arr.length + " items.")
-            // arr.forEach((item) => {
-            //     console.log(item)
-            // })
-            // console.log("")
-            // console.log("insertID_ newArray - " + typeof (newArray) + " - " + newArray.length + " items.")
-            // newArray.forEach((item) => {
-            //     console.log(item)
-            // })
-            // console.log("")
-
-            console.log("[FIM] - Array Novo, iniciando ID's - " + typeof (arr) + " - " + arr.length + " items.")
-
         }
 
         return newArray;
 
+    }
+    function reverseString(text) {
+        return text.split("-").reverse().join("/");
+    }
+    function getAge(text){        
+        let now = moment();
+        let birthDate = moment(reverseString(text), 'DD/MM/YYYY');
+        let diference = moment.duration(now - birthDate).as('years')
+
+        return Math.floor(diference);
     }
 
     const TabDados = () => (
@@ -214,7 +180,7 @@ const Details = () => {
                                         </View>
                                         <View style={styles.textNameContainer}>
                                             <Text style={styles.textMiddle}>Nascimento </Text>
-                                            <Text style={styles.textSmall}>{itemDetails.dataNascimento}</Text>
+                        <Text style={styles.textSmall}>{reverseString(itemDetails.dataNascimento)} - {getAge(itemDetails.dataNascimento)} anos</Text>
                                         </View>
                                         <View style={styles.textNameContainer}>
                                             <Text style={styles.textMiddle}>Cidade/Estado</Text>
@@ -264,6 +230,8 @@ const Details = () => {
                                         keyExtractor={(item) => String(item.id)}
                                         onEndReached={fetchMoreSpends}
                                         onEndReachedThreshold={0.1}
+                                        refreshing={isFetchingSpends}
+                                        onRefresh={fetchSpends}
                                         renderItem={({ item }) => (
                                             <View style={styles.tabSpendsContainer} >
                                                 <View style={styles.textNameContainer} >
@@ -303,10 +271,10 @@ const Details = () => {
         <TabBar
             {...props}
             style={styles.tabBarTitle}
-            
+
 
             indicatorStyle={styles.tabBarStyleindicatorStyle}
-            
+
 
             renderIcon={({ route, focused }) => (
                 <IconFA
@@ -348,11 +316,11 @@ const Details = () => {
                         </View>
                     </View>
                     <View style={styles.tabViewContainer}>
-                        <TabView                        
+                        <TabView
                             navigationState={{ index, routes }}
                             renderScene={renderScene}
                             onIndexChange={setIndex}
-                            initialLayout={{width: SCREEN_WIDTH - 100}}
+                            initialLayout={{ width: SCREEN_WIDTH - 100 }}
                             style={styles.tabViewBar}
                             renderTabBar={renderTabBar}
                         />
@@ -465,7 +433,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginBottom: 10,
     },
-    flatListTabSpends:{
+    flatListTabSpends: {
         paddingTop: 10,
     },
     tabViewBar: {

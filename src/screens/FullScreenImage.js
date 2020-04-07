@@ -4,7 +4,6 @@ import {
     SafeAreaView,
     StyleSheet,
     View,
-    Text,
     StatusBar,
     Dimensions,
     Image,

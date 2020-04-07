@@ -5,9 +5,6 @@ import { createSharedElementStackNavigator } from 'react-navigation-shared-eleme
 import MainScreen from '../screens/MainScreen'
 import Details from '../screens/Details'
 import FullScreenImage from '../screens/FullScreenImage'
-import App from '../../App'
-import test_tabs from '../tests/test_tabs'
-
 
 const stackNavigator = createSharedElementStackNavigator(
     createStackNavigator,
@@ -15,8 +12,7 @@ const stackNavigator = createSharedElementStackNavigator(
         MainScreen: MainScreen,
         Details: Details,
         FullScreenImage: FullScreenImage,
-        App: App,
-        test_tabs: test_tabs,
+
     },
     {
         initialRouteName: 'MainScreen',
