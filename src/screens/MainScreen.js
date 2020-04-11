@@ -223,14 +223,3 @@ const styles = StyleSheet.create({
 });
 
 export default MainScreen
-/*
---todo
--mensagem de erro caso não carregue a lista
-
---cores
-#0f3250
-#4d8aff
-#f4fafb
-#FFFFFF
-#000000
-*/

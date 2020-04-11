@@ -146,7 +146,7 @@ const Details = () => {
     function reverseString(text) {
         return text.split("-").reverse().join("/");
     }
-    function getAge(text){        
+    function getAge(text) {
         let now = moment();
         let birthDate = moment(reverseString(text), 'DD/MM/YYYY');
         let diference = moment.duration(now - birthDate).as('years')
@@ -180,7 +180,7 @@ const Details = () => {
                                         </View>
                                         <View style={styles.textNameContainer}>
                                             <Text style={styles.textMiddle}>Nascimento </Text>
-                        <Text style={styles.textSmall}>{reverseString(itemDetails.dataNascimento)} - {getAge(itemDetails.dataNascimento)} anos</Text>
+                                            <Text style={styles.textSmall}>{reverseString(itemDetails.dataNascimento)} - {getAge(itemDetails.dataNascimento)} anos</Text>
                                         </View>
                                         <View style={styles.textNameContainer}>
                                             <Text style={styles.textMiddle}>Cidade/Estado</Text>
@@ -473,11 +473,3 @@ const styles = StyleSheet.create({
 
 
 export default Details;
-/*
---cores
-#0f3250
-#4d8aff
-#f4fafb
-#204969
-#000000
-*/
